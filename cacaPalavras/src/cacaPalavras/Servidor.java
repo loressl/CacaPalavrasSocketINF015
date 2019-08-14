@@ -10,7 +10,9 @@ public class Servidor {
 			System.out.println("Servidor em rede");
 			while (true) {
 				Socket cliente = server.accept();
-                                System.out.println("Cliente IP: [" + cliente.getInetAddress().toString().split("/")[1] + "] Porta: " + cliente.getLocalPort() + " - conectado"  );
+                                System.out.println("Cliente IP: [" + cliente.getInetAddress().toString().split("/")[1] + "] Porta: " 
+						   + cliente.getLocalPort() 
+						   + " - conectado"  );
 				Thread thread = new Thread(new CacaPalavra(cliente));
 				thread.start();
 			}
