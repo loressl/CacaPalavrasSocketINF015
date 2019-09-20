@@ -10,12 +10,12 @@ package quadros;
  * @author jonatas.santos
  */
 public class QuadroTecnologia extends QuadroPalavras {
-    String[] palavras = {"intel", "memoria", "linux", "microsoft", "pixel"};
+    String[] palavras = {"intel", "memoria", "linux", "socket", "pixel"};
     
     public QuadroTecnologia() {
         quadro =   "P T Z U I N T E L L \n" 
                  + "I A N A U G N O T I \n"
-                 + "X M I C R O S O F N \n"
+                 + "X S O C K E T L W N \n"
                  + "E C D I Y U P T A U \n" 
                  + "L A M E M O R I A X \n";
     }

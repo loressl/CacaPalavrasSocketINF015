@@ -203,7 +203,7 @@ public class CacaPalavra implements Runnable {
         for (String palavraDigitada : palavrasAcertadas) {
             if(palavra.equalsIgnoreCase(palavraDigitada))
                 return 0;
-            
+        }
             for (String palavraRegistrada : palavras) {
                 if (palavra.equalsIgnoreCase(palavraRegistrada)) {
                     calculaPontuacao(palavra.length());
@@ -212,7 +212,6 @@ public class CacaPalavra implements Runnable {
                     return 1;
                 }
             }
-        }
         return -1;
     }
 

@@ -105,7 +105,7 @@ public class Cliente {
         segundos = ( ms / 1000 ) % 60;
         
         System.out.println();
-        System.out.println(String.format( "%02d:%02d:%02d", horas, minutos,segundos ));
+        System.out.println(String.format( "%02d:%02d:%02d", horas-3, minutos,segundos ));
         System.out.println();
     }
     
