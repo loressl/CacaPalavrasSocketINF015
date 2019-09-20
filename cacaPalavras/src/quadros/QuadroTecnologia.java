@@ -9,17 +9,16 @@ package quadros;
  *
  * @author jonatas.santos
  */
-public class QuadroAleatorio extends QuadroPalavras{
-    String[] palavras = {"ceu", "cadeiras", "samba", "corda", "casa"};
-            
-    public QuadroAleatorio(){
-        quadro =   "J A D C O R D A X Y \n"
-                 + "C A S A U G V L Á R \n"
-                 + "E H S A M B A G I G \n"
-                 + "U C U U N L Q K E I \n"
-                 + "A P C A D E I R A S \n";
-    }
+public class QuadroTecnologia extends QuadroPalavras {
+    String[] palavras = {"intel", "memoria", "linux", "microsoft", "pixel"};
     
+    public QuadroTecnologia() {
+        quadro =   "P T Z U I N T E L L \n" 
+                 + "I A N A U G N O T I \n"
+                 + "X M I C R O S O F N \n"
+                 + "E C D I Y U P T A U \n" 
+                 + "L A M E M O R I A X \n";
+    }
 
     @Override
     public String getQuadro() {
@@ -30,5 +29,5 @@ public class QuadroAleatorio extends QuadroPalavras{
     public String[] getPalavras() {
         return palavras;
     }
-        
+    
 }

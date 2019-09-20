@@ -24,10 +24,12 @@ public class Quadros {
         QuadroPalavras aleatorio = new QuadroAleatorio();
         QuadroPalavras esporte = new QuadroEsporte();
         QuadroPalavras musica = new QuadroMusica();
+        QuadroPalavras tecnologia = new QuadroTecnologia();
         
         quadroPalavras.put("aleatorio",aleatorio);
         quadroPalavras.put("esporte",esporte);
         quadroPalavras.put("musica",musica);
+        quadroPalavras.put("tecnologia",tecnologia);
     }
 
     public HashMap<String, QuadroPalavras> getQuadroPalavras() {

@@ -7,27 +7,27 @@ import java.util.Scanner;
 
 //  ♠Implementações Pendentes♠
 //    • Mostrar a contagem regressiva para o usuario
-//    • Mostra quantidade de palavras o usuario já acertou - OPCIONAL
 
 public class CacaPalavra implements Runnable {
     private Thread contador;
     private Quadros quadros;
     private Socket cliente;
     
-    private String[] temas = {"aleatorio", "esporte", "musica"};
-    private String[] palavras;// = quadros.getQuadroPalavras().get("esporte").getPalavras();
-    private String[] palavrasUsuario;// = new String[palavras.length];
-    private String quadroPalavras;// = quadros.getQuadroPalavras().get("esporte").getQuadro();
+    private String[] temas = {"aleatorio", "esporte", "musica", "tecnologia"};
+    private String[] palavras;
+    private String[] palavrasAcertadas;
+    private String quadroPalavras;
     private String palavraUsuario;
-    private String tempoTotal;
+    private String tempoTotal = "";
+    private String tempoDecorrido = "";
 
     private short time;
     private short tempoLimite = 2;
     
-    int qtdPalavras;
-    int acertos;
-    int tentativas;
-    int pontuacao;
+    private short qtdPalavras;
+    private short acertos;
+    private short tentativas;
+    private short pontuacao;
 
     public CacaPalavra(Socket cliente) {
         this.cliente = cliente;
@@ -35,7 +35,29 @@ public class CacaPalavra implements Runnable {
         acertos = 0;
         tentativas = 0;
         pontuacao = 0;
-        //int numAleatorio = new Random().nextInt(4);
+    }
+    
+    private void inicializarPalavrasAcertadas() {
+        palavrasAcertadas = new String[5];
+        for (int i = 0; i < 5; i++) {
+            palavrasAcertadas[i] = "";
+        }
+    }
+    
+    private String exibirPalavrasAcertadas() {
+        String words = "";
+        String word;
+        
+        for (int i = 0; i < 5; i++) {
+            word = palavrasAcertadas[i];
+            
+            if(i==4)
+                words += "[" + word + "] ";
+            else
+                words += "[" + word + "], ";
+        }
+        
+        return words;
     }
 
     @Override
@@ -62,6 +84,7 @@ public class CacaPalavra implements Runnable {
                 out.flush();
 
                 while (acertos <= qtdPalavras) {
+                    out.println("\nPalavras Encontradas: " + exibirPalavrasAcertadas());
                     palavraUsuario = in.next();
 
                     if(palavraUsuario.equals("fim")){
@@ -80,7 +103,6 @@ public class CacaPalavra implements Runnable {
                     if(tempoLimite == 0){
                         out.print("acabou\n");
                         out.print("Tempo Esgotado -> [0"+tempoTotal+"0]\n");
-                        contador.stop();
                         acertos = 0;
                         tempoLimite = 2;
                         tentativas = 0;
@@ -88,15 +110,24 @@ public class CacaPalavra implements Runnable {
                     }
 
                     if (acertos == 5) {
+                        contador.stop();
                         tentativas++;
                         out.print("fim\n");
                         out.println("Voce achou: \"" + palavraUsuario + "\" ☻");
                         out.println("Parabéns !! Você encontrou todas as palavras ☻");
+                        out.println("Palavras Encontradas: " + exibirPalavrasAcertadas());
                         out.println("Total de tentativas: " + tentativas);
                         out.println("Pontuação: " + pontuacao + "\n");
-                        out.println("Tempo total: " + tempoTotal);
                         
-                        contador.stop();
+                        //Criar metodo para formatar tempo
+                        int minutosDecorridos = Integer.parseInt(tempoDecorrido.split(":")[0]);
+                        int segundosDecorridos = Integer.parseInt(tempoDecorrido.split(":")[1]);
+                        
+                        if(segundosDecorridos > 9)
+                            out.println("Tempo Decorrido: [0"+ minutosDecorridos + ":" + segundosDecorridos +"]");
+                        else if(segundosDecorridos < 10)
+                            out.println("Tempo Decorrido: [0"+ minutosDecorridos + ":0" + segundosDecorridos +"]");
+                        
                         acertos = 0;
                         tempoLimite = 2;
                         tentativas = 0;
@@ -133,23 +164,34 @@ public class CacaPalavra implements Runnable {
         @Override
         public void run() {
             try{
-                    short minutos = 1 ;
-                    short segundos = 59;
+                    short minutosTotal = 1 ;
+                    short segundosTotal = 59;
+                    short minutosDecorrido = 0 ;
+                    short segundosDecorrido = 0;
                     
                     while(true){
-                        if(minutos == 0 && segundos == 0){
-                            String format = minutos + ":"+ segundos;
-                            tempoTotal = format;
-                            tempoLimite = minutos;
+                        if(minutosTotal == 0 && segundosTotal == 0){
+                            tempoTotal = minutosTotal + ":"+ segundosTotal;
+                            tempoLimite = minutosTotal;
+                            Thread.currentThread().stop();
                             break;
                         }
                             
-                        if(segundos == 0){
-                            segundos = 59;
-                            minutos--;
+                        if(segundosTotal == 0){
+                            segundosTotal = 59;
+                            minutosTotal--;
                         }
+                        
+                        if(segundosDecorrido == 59){
+                            segundosDecorrido = 0;
+                            minutosDecorrido++;
+                        }
+                        
                         Thread.sleep(1000);
-                        segundos--;
+                        segundosTotal--;
+                        segundosDecorrido++;
+                        
+                        tempoDecorrido = minutosDecorrido + ":"+ segundosDecorrido;
                     }
                 
             } catch (Exception e){}
@@ -157,29 +199,21 @@ public class CacaPalavra implements Runnable {
         }
     };
     
-    public int verificaPalavra(String palavra) {
-        int i=0;
-        for (String palavraDigitada : palavrasUsuario) {
+    private int verificaPalavra(String palavra) {
+        for (String palavraDigitada : palavrasAcertadas) {
             if(palavra.equalsIgnoreCase(palavraDigitada))
                 return 0;
             
             for (String palavraRegistrada : palavras) {
                 if (palavra.equalsIgnoreCase(palavraRegistrada)) {
                     calculaPontuacao(palavra.length());
-                    palavrasUsuario[i] = palavra;
+                    palavrasAcertadas[acertos] = palavra;
                     acertos++;
-                    i++;
                     return 1;
                 }
             }
         }
         return -1;
-    }
-
-    private void inicializarPalavrasUsuario() {
-        for (int i = 0; i < palavrasUsuario.length; i++) {
-            palavrasUsuario[i] = "";
-        }
     }
 
     private void calculaPontuacao(int tamanhoPalavra) {
@@ -202,8 +236,8 @@ public class CacaPalavra implements Runnable {
         String temaUsuario;
         boolean temaValido = false;
         
-        out.println("Escolha o tema do Caça Palavras ou digite \"SAIR\" para encerrar o jogo");
-        out.println("Aleatorio | Esporte | Musica\n");
+        out.println("Escolha abaixo o tema do Caça Palavras ou digite \"SAIR\" para encerrar o jogo");
+        out.println("Aleatorio | Esporte | Musica | Tecnologia\n");
         temaUsuario = in.next();
         temaUsuario = temaUsuario.toLowerCase();
         
@@ -223,21 +257,11 @@ public class CacaPalavra implements Runnable {
             }
             if(temaValido == false)
                 temaUsuario = "aleatorio";
-               
+            
+            inicializarPalavrasAcertadas();
             palavras = quadros.getQuadroPalavras().get(temaUsuario).getPalavras();
-            palavrasUsuario = new String[palavras.length];
-            qtdPalavras = palavras.length;
+            qtdPalavras = (short) palavras.length;
             quadroPalavras = quadros.getQuadroPalavras().get(temaUsuario).getQuadro();
-            inicializarPalavrasUsuario();
-                
-                
-//            if(!temaValido){
-//                palavras = quadros.getQuadroPalavras().get("aleatorio").getPalavras();
-//                palavrasUsuario = new String[palavras.length];
-//                qtdPalavras = palavras.length;
-//                quadroPalavras = quadros.getQuadroPalavras().get("aleatorio").getQuadro();
-//                inicializarPalavrasUsuario();
-//            }
         }
     }
     
@@ -249,7 +273,7 @@ public class CacaPalavra implements Runnable {
         out.println("## -> Desconsidere acentos ao formar palavras. (Um “C” pode ser “Ç” ou um “A” pode ser “Ã”)    ##");
         out.println("## -> Forme qualquer palavra no plural ou singular                                             ##");
         out.println("## -> Não valem nomes próprios ou palavras estrangeiras                                        ##");
-        out.println("## -> Tempo para encontrar as palavras: 2 Minutos                                                                                            ##");
+        out.println("## -> Tempo para encontrar as palavras: 2 Minutos                                              ##");
         out.println("##                                                                                             ##");
         out.println("## -> PONTUAÇÃO:  4 letras = 1 ponto | 5 letras = 3 pontos | 6 ou mais letras = 5 pontos       ##");
         out.println("##                                                                                             ##");

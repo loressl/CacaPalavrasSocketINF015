@@ -27,36 +27,20 @@ public class Cliente {
 
                 //Escolhe o tema do jogo
                 continua = escolherTema(in, out, inUser, client);
-
+                pegarTempoInicial();
                 if(continua){
-
+                    Thread.sleep(700);
+                    limparConsole();
                     //Exibe o nome "CAÇA PALAVRAS e o Quadro de palavras"
                     exibeQuadro(in);
-                    
-                    
+                
+                //Reduzir para um While para limpar a tela enquanto o usuário digita as palavras    
+                //Pegar o tempo inicial e mostrar na tela para o usuario saber quando comecou a contar
                     while (true) {
-                        //MUDAR A ORDEM DAS CONDICIONAIS
-             
-                        if(saida.equalsIgnoreCase("fim")){
-                            System.out.println(in.nextLine());
-                            System.out.println();
-                            System.out.println(in.nextLine());
-                            System.out.println();
-                            System.out.println(in.nextLine());
-                            System.out.println(in.nextLine());
-                            System.out.println(in.nextLine());
-                            saida = "";
-                            newGame();
-                            continue inicioGame;
-                        }
+                        // Mostra as palavras que o usuario acertou
+                        System.out.println(in.nextLine());
+                        System.out.println(in.nextLine());
                         
-                        if(saida.equalsIgnoreCase("acabou")){
-                            System.out.println(in.nextLine());
-                            saida = "";
-                            newGame();
-                            continue inicioGame;
-                        }
-
                         System.out.println("\nEscreva uma Palavra ou \"SAIR\" para encerrar o jogo");
                         palavraDigitada = inUser.nextLine();
                         if(palavraDigitada.equalsIgnoreCase("sair")){
@@ -74,10 +58,26 @@ public class Cliente {
                             newGame();
                             continue inicioGame;
                         }
+                        
+                        if(saida.equalsIgnoreCase("fim")){
+                            System.out.println(in.nextLine());
+                            System.out.println();
+                            limparConsole();
+                            System.out.println(in.nextLine());
+                            System.out.println(in.nextLine());
+                            System.out.println();
+                            System.out.println(in.nextLine());
+                            System.out.println(in.nextLine());
+                            System.out.println(in.nextLine());
+                            System.out.println(in.nextLine());
+                            saida = "";
+                            newGame();
+                            continue inicioGame;
+                        }
                         System.out.println(in.nextLine());
                     }// Fim do Jogo
                 } //Executa se continua for true
-                else{ // se continuar for false
+                else{ // se o usuario escreveu sair no lugar do tema
                     break;
                 }
             }
@@ -85,7 +85,30 @@ public class Cliente {
             e.printStackTrace();
         }
     }
-
+    
+    private static void pegarTempoInicial() {
+       
+        /*
+            segundos = ( ms / 1000 ) % 60;  
+            minutos  = ( ms / 60000 ) % 60;     // 60000    = 60 * 1000
+            horas    = ( ms / 3600000 ) % 24;   // 3600000  = 60 * 60 * 1000
+            dias     = ms / 86400000            // 86400000 = 24 * 60 * 60 * 1000
+        */
+        
+        long horas;
+        long minutos;
+        long segundos;
+        long ms = System.currentTimeMillis();
+        
+        horas    = ( ms / 3600000 ) % 24;
+        minutos  = ( ms / 60000 ) % 60;
+        segundos = ( ms / 1000 ) % 60;
+        
+        System.out.println();
+        System.out.println(String.format( "%02d:%02d:%02d", horas, minutos,segundos ));
+        System.out.println();
+    }
+    
     private static void exibirRegras(Scanner in) {
         for(int i=0; i<14; i++)
             System.out.println(in.nextLine());
