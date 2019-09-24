@@ -5,14 +5,13 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-//  ♠Implementações Pendentes♠
-//    • Mostrar a contagem regressiva para o usuario
 
 public class CacaPalavra implements Runnable {
     private Thread contador;
     private Quadros quadros;
     private Socket cliente;
     
+    private String temaUsuario;
     private String[] temas = {"aleatorio", "esporte", "musica", "tecnologia"};
     private String[] palavras;
     private String[] palavrasAcertadas;
@@ -77,13 +76,13 @@ public class CacaPalavra implements Runnable {
                 contador = new Thread(conometro);
                 contador.start();
 
-                out.println("\nCAÇA PALAVRAS\n");
-                out.flush();
-
-                out.print(quadroPalavras);
-                out.flush();
+//                out.print(quadroPalavras);
+//                out.flush();
 
                 while (acertos <= qtdPalavras) {
+                    out.println("TEMA ESCOLHIDO: " + temaUsuario.toUpperCase());
+                    out.print(quadroPalavras);
+                    
                     out.println("\nPalavras Encontradas: " + exibirPalavrasAcertadas());
                     palavraUsuario = in.next();
 
@@ -232,7 +231,6 @@ public class CacaPalavra implements Runnable {
     
     @SuppressWarnings("CallToPrintStackTrace")
     private void escolheQuadro(Scanner in, PrintWriter out) {
-        String temaUsuario;
         boolean temaValido = false;
         
         out.println("Escolha abaixo o tema do Caça Palavras ou digite \"SAIR\" para encerrar o jogo");
