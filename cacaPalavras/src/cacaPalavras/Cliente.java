@@ -7,11 +7,10 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-// CORRIGIR DIFERENCA DO TEMPO DE TERMINO DO JOGO
 public class Cliente {
 
     private static String tempoInicial = null;
-    private static String tempoFinal = null;
+    private static String tempoDecorrido = "02:00";
 
     @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch"})
     public static void main(String[] args) {
@@ -22,6 +21,7 @@ public class Cliente {
             PrintWriter out = new PrintWriter(client.getOutputStream(), true);
             String saida = "";
             String palavraDigitada;
+            Thread contador;
 
             boolean continua;
 
@@ -34,21 +34,23 @@ public class Cliente {
                 continua = escolherTema(in, out, inUser, client);
 
                 if (continua) {
+                    //começa a contar o tempo
+                    contador = new Thread(conometro);
+                    contador.start();
                     Thread.sleep(700);
                     limparConsole();
 
-//                    //Exibe o nome "CAÇA PALAVRAS e o Quadro de palavras"
-//                    exibeQuadro(in);
                     while (true) {
+                        System.out.println("Conômetro: " + tempoDecorrido);
                         //Exibe o nome "CAÇA PALAVRAS o tema escolhido e o Quadro de palavras"
                         exibeQuadro(in);
-
                         System.out.println(in.nextLine());
                         System.out.println(in.nextLine());
 
                         System.out.println("\nEscreva uma Palavra ou \"SAIR\" para encerrar o jogo");
                         palavraDigitada = inUser.nextLine();
                         if (palavraDigitada.equalsIgnoreCase("sair")) {
+                            contador.stop();
                             endGame(out, client);
                             break inicioGame;
                         }
@@ -58,6 +60,7 @@ public class Cliente {
                         saida = in.nextLine();
 
                         if (saida.equalsIgnoreCase("acabou")) {
+                            contador.stop();
                             System.out.println(in.nextLine());
                             saida = "";
                             newGame();
@@ -65,6 +68,7 @@ public class Cliente {
                         }
 
                         if (saida.equalsIgnoreCase("fim")) {
+                            contador.stop();
                             System.out.println(in.nextLine());
                             System.out.println();
                             Thread.sleep(1000);
@@ -96,7 +100,42 @@ public class Cliente {
         }
     }
 
-    private static String pegarTempoInicial(String tempo) {
+    private static Runnable conometro = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                short minutosDecorridos = 1;
+                short segundosDecorridos = 59;
+
+                while (true) {
+                    if (segundosDecorridos > 9) {
+                           tempoDecorrido = "[0" + minutosDecorridos + ":" + segundosDecorridos + "]";
+                        } else if (segundosDecorridos < 10) {
+                            tempoDecorrido = "[0" + minutosDecorridos + ":0" + segundosDecorridos + "]";
+                        }
+                    
+                    if (minutosDecorridos == 0 && segundosDecorridos == 0) {
+                        tempoDecorrido = minutosDecorridos + ":" + segundosDecorridos;
+                        Thread.currentThread().stop();
+                        break;
+                    }
+
+                    if (segundosDecorridos == 0) {
+                        segundosDecorridos = 59;
+                        minutosDecorridos--;
+                    }
+
+                    Thread.sleep(1500);
+                    segundosDecorridos--;
+                }
+
+            } catch (Exception e) {
+            }
+
+        }
+    };
+
+    private static String getTempoSistema(String tempo) {
 
         /*
             segundos = ( ms / 1000 ) % 60;  
@@ -113,18 +152,21 @@ public class Cliente {
         minutos = (ms / 60000) % 60;
         segundos = (ms / 1000) % 60;
 
-        if (tempo.equalsIgnoreCase("inicial")) {
-            if (tempoInicial == null) {
-                tempoInicial = String.format("%02d:%02d:%02d", horas - 3, minutos, segundos);
-            }
-            return tempoInicial;
+        if (horas >= 0 && horas <= 2) {
+            horas += 21;
         } else {
-            if (tempoFinal == null) {
-                tempoFinal = String.format("%02d:%02d:%02d", horas - 3, minutos + 2, segundos);
-            }
-            return tempoFinal;
+            horas -= 3;
         }
 
+        if (tempo.equalsIgnoreCase("inicial")) {
+            if (tempoInicial == null) {
+                tempoInicial = String.format("%02d:%02d:%02d", horas, minutos, segundos);
+            }
+        } else {
+            return String.format("%02d:%02d:%02d", horas, minutos + 2, segundos);
+        }
+
+        return tempoInicial;
     }
 
     private static void exibirRegras(Scanner in) {
@@ -155,8 +197,7 @@ public class Cliente {
 
     private static void exibeQuadro(Scanner in) {
         // Exibe o nome: CAÇA PALAVRAS
-        System.out.println("\nCAÇA PALAVRAS" + " | Tempo Inicial: " + pegarTempoInicial("inicial")
-                + " | Tempo Final: " + pegarTempoInicial("final") + "\n");
+        System.out.println("\nCAÇA PALAVRAS" + " | Tempo Inicial: " + getTempoSistema("inicial"));
 
         //Exibe o tema escolhido pelo usuario
         System.out.println(in.nextLine());
@@ -173,7 +214,6 @@ public class Cliente {
     private static void newGame() {
         try {
             tempoInicial = null;
-            tempoFinal = null;
             Thread.sleep(5000);
             limparConsole();
 
@@ -186,6 +226,7 @@ public class Cliente {
         try {
             limparConsole();
             out.println("fim");
+            Thread.sleep(100);
             System.out.println("FIM DE JOGO !!");
             client.close();
         } catch (Exception e) {

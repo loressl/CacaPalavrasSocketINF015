@@ -4,25 +4,27 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CacaPalavra implements Runnable {
+
     private Thread contador;
     private Quadros quadros;
     private Socket cliente;
-    
+
     private String temaUsuario;
     private String[] temas = {"aleatorio", "esporte", "musica", "tecnologia"};
     private String[] palavras;
     private String[] palavrasAcertadas;
     private String quadroPalavras;
     private String palavraUsuario;
-    private String tempoTotal = "";
-    private String tempoDecorrido = "";
+    private String tempoTotal = "00:00";
+    private String tempoDecorrido = "00:00";
 
     private short time;
     private short tempoLimite = 2;
-    
+
     private short qtdPalavras;
     private short acertos;
     private short tentativas;
@@ -35,27 +37,28 @@ public class CacaPalavra implements Runnable {
         tentativas = 0;
         pontuacao = 0;
     }
-    
+
     private void inicializarPalavrasAcertadas() {
         palavrasAcertadas = new String[5];
         for (int i = 0; i < 5; i++) {
             palavrasAcertadas[i] = "";
         }
     }
-    
+
     private String exibirPalavrasAcertadas() {
         String words = "";
         String word;
-        
+
         for (int i = 0; i < 5; i++) {
             word = palavrasAcertadas[i];
-            
-            if(i==4)
+
+            if (i == 4) {
                 words += "[" + word + "] ";
-            else
+            } else {
                 words += "[" + word + "], ";
+            }
         }
-        
+
         return words;
     }
 
@@ -65,28 +68,28 @@ public class CacaPalavra implements Runnable {
         try {
             Scanner in = new Scanner(this.cliente.getInputStream());
             PrintWriter out = new PrintWriter(this.cliente.getOutputStream(), true);
-            
+
             inicio:
-            while(true){
-            
+            while (true) {
+
                 mostrarRegras(in, out);
                 escolheQuadro(in, out);
-                
+
                 //começa a contar o tempo
                 contador = new Thread(conometro);
+                Thread.sleep(700);
                 contador.start();
 
 //                out.print(quadroPalavras);
 //                out.flush();
-
                 while (acertos <= qtdPalavras) {
                     out.println("TEMA ESCOLHIDO: " + temaUsuario.toUpperCase());
                     out.print(quadroPalavras);
-                    
+
                     out.println("\nPalavras Encontradas: " + exibirPalavrasAcertadas());
                     palavraUsuario = in.next();
 
-                    if(palavraUsuario.equals("fim")){
+                    if (palavraUsuario.equals("fim")) {
                         try {
                             cliente.close();
                             contador.stop();
@@ -98,10 +101,10 @@ public class CacaPalavra implements Runnable {
                     }
 
                     int acertou = verificaPalavra(palavraUsuario);
-                    
-                    if(tempoLimite == 0){
+
+                    if (tempoLimite == 0) {
                         out.print("acabou\n");
-                        out.print("Tempo Esgotado -> [0"+tempoTotal+"0]\n");
+                        out.print("Tempo Esgotado -> [" + getTempoSistema() + "]\n");
                         acertos = 0;
                         tempoLimite = 2;
                         tentativas = 0;
@@ -117,22 +120,22 @@ public class CacaPalavra implements Runnable {
                         out.println("Palavras Encontradas: " + exibirPalavrasAcertadas());
                         out.println("Total de tentativas: " + tentativas);
                         out.println("Pontuação: " + pontuacao + "\n");
-                        
+
                         //Criar metodo para formatar tempo
                         int minutosDecorridos = Integer.parseInt(tempoDecorrido.split(":")[0]);
                         int segundosDecorridos = Integer.parseInt(tempoDecorrido.split(":")[1]);
-                        
-                        if(segundosDecorridos > 9)
-                            out.println("Tempo Decorrido: [0"+ minutosDecorridos + ":" + segundosDecorridos +"]");
-                        else if(segundosDecorridos < 10)
-                            out.println("Tempo Decorrido: [0"+ minutosDecorridos + ":0" + segundosDecorridos +"]");
-                        
+
+                        if (segundosDecorridos > 9) {
+                            out.println("Tempo Decorrido: [0" + minutosDecorridos + ":" + segundosDecorridos + "]");
+                        } else if (segundosDecorridos < 10) {
+                            out.println("Tempo Decorrido: [0" + minutosDecorridos + ":0" + segundosDecorridos + "]");
+                        }
+
                         acertos = 0;
                         tempoLimite = 2;
                         tentativas = 0;
                         continue inicio;
-                    } 
-                    else{
+                    } else {
                         switch (acertou) {
                             case 1:
                                 tentativas++;
@@ -156,61 +159,91 @@ public class CacaPalavra implements Runnable {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(CacaPalavra.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private String getTempoSistema() {
+
+        /*
+            segundos = ( ms / 1000 ) % 60;  
+            minutos  = ( ms / 60000 ) % 60;     // 60000    = 60 * 1000
+            horas    = ( ms / 3600000 ) % 24;   // 3600000  = 60 * 60 * 1000
+            dias     = ms / 86400000            // 86400000 = 24 * 60 * 60 * 1000
+         */
+        long horas;
+        long minutos;
+        long segundos;
+        long ms = System.currentTimeMillis();
+
+        horas = (ms / 3600000) % 24;
+        minutos = (ms / 60000) % 60;
+        segundos = (ms / 1000) % 60;
+
+        if (horas >= 0 && horas <= 2) {
+            horas += 21;
+        } else {
+            horas -= 3;
+        }
+
+        return String.format("%02d:%02d:%02d", horas, minutos, segundos);
     }
 
     private Runnable conometro = new Runnable() {
         @Override
         public void run() {
-            try{
-                    short minutosTotal = 1 ;
-                    short segundosTotal = 59;
-                    short minutosDecorrido = 0 ;
-                    short segundosDecorrido = 0;
-                    
-                    while(true){
-                        if(minutosTotal == 0 && segundosTotal == 0){
-                            tempoTotal = minutosTotal + ":"+ segundosTotal;
-                            tempoLimite = minutosTotal;
-                            Thread.currentThread().stop();
-                            break;
-                        }
-                            
-                        if(segundosTotal == 0){
-                            segundosTotal = 59;
-                            minutosTotal--;
-                        }
-                        
-                        if(segundosDecorrido == 59){
-                            segundosDecorrido = 0;
-                            minutosDecorrido++;
-                        }
-                        
-                        Thread.sleep(1000);
-                        segundosTotal--;
-                        segundosDecorrido++;
-                        
-                        tempoDecorrido = minutosDecorrido + ":"+ segundosDecorrido;
+            try {
+                short minutosTotal = 1;
+                short segundosTotal = 59;
+                short minutosDecorrido = 0;
+                short segundosDecorrido = 0;
+
+                while (true) {
+                    if (minutosTotal == 0 && segundosTotal == 0) {
+                        tempoTotal = minutosTotal + ":" + segundosTotal;
+                        tempoLimite = minutosTotal;
+                        Thread.currentThread().stop();
+                        break;
                     }
-                
-            } catch (Exception e){}
- 
+
+                    if (segundosTotal == 0) {
+                        segundosTotal = 59;
+                        minutosTotal--;
+                    }
+
+                    if (segundosDecorrido == 59) {
+                        segundosDecorrido = 0;
+                        minutosDecorrido++;
+                    }
+
+                    Thread.sleep(1230);
+                    segundosTotal--;
+                    segundosDecorrido++;
+
+                    tempoDecorrido = minutosDecorrido + ":" + segundosDecorrido;
+                }
+
+            } catch (Exception e) {
+            }
+
         }
     };
-    
+
     private int verificaPalavra(String palavra) {
         for (String palavraDigitada : palavrasAcertadas) {
-            if(palavra.equalsIgnoreCase(palavraDigitada))
+            if (palavra.equalsIgnoreCase(palavraDigitada)) {
                 return 0;
-        }
-            for (String palavraRegistrada : palavras) {
-                if (palavra.equalsIgnoreCase(palavraRegistrada)) {
-                    calculaPontuacao(palavra.length());
-                    palavrasAcertadas[acertos] = palavra;
-                    acertos++;
-                    return 1;
-                }
             }
+        }
+        for (String palavraRegistrada : palavras) {
+            if (palavra.equalsIgnoreCase(palavraRegistrada)) {
+                calculaPontuacao(palavra.length());
+                palavrasAcertadas[acertos] = palavra;
+                acertos++;
+                return 1;
+            }
+        }
         return -1;
     }
 
@@ -218,50 +251,50 @@ public class CacaPalavra implements Runnable {
 
         switch (tamanhoPalavra) {
             case 4:
-                pontuacao+=1;
+                pontuacao += 1;
                 break;
             case 5:
-                pontuacao+=3;
+                pontuacao += 3;
                 break;
             default:
-                pontuacao+=5;
+                pontuacao += 5;
                 break;
         }
     }
-    
+
     @SuppressWarnings("CallToPrintStackTrace")
     private void escolheQuadro(Scanner in, PrintWriter out) {
         boolean temaValido = false;
-        
+
         out.println("Escolha abaixo o tema do Caça Palavras ou digite \"SAIR\" para encerrar o jogo");
         out.println("Aleatorio | Esporte | Musica | Tecnologia\n");
         temaUsuario = in.next();
         temaUsuario = temaUsuario.toLowerCase();
-        
-        if(temaUsuario.equals("fim")){
+
+        if (temaUsuario.equals("fim")) {
             try {
                 cliente.close();
                 Thread.currentThread().stop();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } 
-        else{
+        } else {
             for (String tema : temas) {
-                if(temaUsuario.equals(tema)){
+                if (temaUsuario.equals(tema)) {
                     temaValido = true;
                 }
             }
-            if(temaValido == false)
+            if (temaValido == false) {
                 temaUsuario = "aleatorio";
-            
+            }
+
             inicializarPalavrasAcertadas();
             palavras = quadros.getQuadroPalavras().get(temaUsuario).getPalavras();
             qtdPalavras = (short) palavras.length;
             quadroPalavras = quadros.getQuadroPalavras().get(temaUsuario).getQuadro();
         }
     }
-    
+
     private void mostrarRegras(Scanner in, PrintWriter out) {
         out.println("#################################################################################################");
         out.println("##                                       REGRAS DO JOGO                                        ##");
@@ -276,7 +309,7 @@ public class CacaPalavra implements Runnable {
         out.println("##                                                                                             ##");
         out.println("## -> Para encerrar o jogo digite \"SAIR\"                                                       ##");
         out.println("#################################################################################################\n");
-        
+
     }
 
 }
